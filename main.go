@@ -8,11 +8,17 @@ import (
 	"io/ioutil"
 	"net/rpc/jsonrpc"
 	"os"
+	"strings"
 )
 
 func usage() {
 	fmt.Fprintln(os.Stderr, `USAGE:
   jr ADDRESS:PORT METHOD [PARAMETER...]
+
+Parameters are key/value pairs. They come in two forms:
+
+  key=value     (for strings; result is "key":"value")
+  key:=value    (for raw JSON; result is "key":value)
 
 Options:
   -no-format	do not format JSON output (default: false)`)
@@ -21,6 +27,28 @@ Options:
 func die(args ...interface{}) {
 	fmt.Fprintln(os.Stderr, args...)
 	os.Exit(1)
+}
+
+// parse arguments of the form foo=bar or foo:=3.
+// NOTE: the arguments are all packed into one object, which is sent as the
+// only parameter. Not sure if this is standard or just a quirk of the Go
+// jsonrpc package.
+func parseArgs(args []string) json.Marshaler {
+	for i, arg := range args {
+		eq := strings.IndexByte(arg, '=')
+		if eq == -1 {
+			die("Invalid argument:", arg)
+		}
+		if arg[eq-1] == ':' {
+			// raw JSON; only quote the key
+			args[i] = fmt.Sprintf("%q:%s", arg[:eq-1], arg[eq+1:])
+		} else {
+			// unquoted string; add quotes
+			args[i] = fmt.Sprintf("%q:%q", arg[:eq], arg[eq+1:])
+		}
+	}
+	js := json.RawMessage("{" + strings.Join(args, ",") + "}")
+	return &js
 }
 
 func main() {
@@ -38,15 +66,16 @@ func main() {
 	haveStdin := (stat.Mode() & os.ModeCharDevice) == 0
 
 	// parse params, if supplied
-	var params json.RawMessage
+	var params json.Marshaler
 	if len(args) > 2 {
-		params = json.RawMessage(args[2])
+		params = parseArgs(args[2:])
 	} else if haveStdin {
 		stdin, err := ioutil.ReadAll(os.Stdin)
 		if err != nil {
 			die("Couldn't read from stdin:", err)
 		}
-		params = json.RawMessage(stdin)
+		js := json.RawMessage(stdin)
+		params = &js
 	}
 
 	// connect to server
@@ -58,7 +87,7 @@ func main() {
 
 	// call
 	var reply json.RawMessage
-	err = cli.Call(args[1], &params, &reply)
+	err = cli.Call(args[1], params, &reply)
 	if err != nil {
 		die("Call failed:", err)
 	}
