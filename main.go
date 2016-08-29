@@ -22,6 +22,7 @@ Parameters are key/value pairs. They come in two forms:
 
 Options:
   -no-format	do not format JSON output (default: false)`)
+	os.Exit(1)
 }
 
 func die(args ...interface{}) {
@@ -75,7 +76,7 @@ func main() {
 			die("Couldn't read from stdin:", err)
 		}
 		js := json.RawMessage(stdin)
-		params = &js
+		params = &js // RawMessage needs pointer receiver
 	}
 
 	// connect to server
