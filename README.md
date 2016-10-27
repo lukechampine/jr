@@ -9,6 +9,11 @@ to users of those programs.
 `jr` does not support the `@` syntax or colored output of the aforementioned
 programs. I'll add them if someone asks me to.
 
+`jr` *does* support an alternative parameter syntax: if you pass a single
+value without a `=`, it will be sent without being enclosed in an object.
+Ideally, you would be able to send multiple values this way (as an array),
+but Go's jsonrpc package does not support this.
+
 Installation
 ------------
 

@@ -8,6 +8,7 @@ import (
 	"io/ioutil"
 	"net/rpc/jsonrpc"
 	"os"
+	"strconv"
 	"strings"
 )
 
@@ -30,11 +31,22 @@ func die(args ...interface{}) {
 	os.Exit(1)
 }
 
-// parse arguments of the form foo=bar or foo:=3.
-// NOTE: the arguments are all packed into one object, which is sent as the
-// only parameter. Not sure if this is standard or just a quirk of the Go
-// jsonrpc package.
-func parseArgs(args []string) json.Marshaler {
+// parse arguments of the form bar, foo=bar, or foo:=3.
+func parseArgs(args []string) *json.RawMessage {
+	// single, unkeyed argument
+	if len(args) == 1 && !strings.ContainsRune(args[0], '=') {
+		arg := args[0]
+		if len(arg) > 0 && arg[0] == ':' {
+			// raw JSON
+			arg = arg[1:]
+		} else {
+			// unquoted string
+			arg = strconv.Quote(arg)
+		}
+		js := json.RawMessage(arg)
+		return &js
+	}
+
 	for i, arg := range args {
 		eq := strings.IndexByte(arg, '=')
 		if eq == -1 {
