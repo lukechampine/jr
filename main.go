@@ -31,7 +31,7 @@ func die(args ...interface{}) {
 }
 
 // parse arguments of the form bar, foo=bar, or foo:=3.
-func parseArgs(args []string) *json.RawMessage {
+func parseArgs(args []string) json.RawMessage {
 	// single, unkeyed argument
 	if len(args) == 1 && !strings.ContainsRune(args[0], '=') {
 		arg := args[0]
@@ -42,8 +42,7 @@ func parseArgs(args []string) *json.RawMessage {
 			// unquoted string
 			arg = strconv.Quote(arg)
 		}
-		js := json.RawMessage(arg)
-		return &js
+		return json.RawMessage(arg)
 	}
 
 	for i, arg := range args {
@@ -59,8 +58,7 @@ func parseArgs(args []string) *json.RawMessage {
 			args[i] = fmt.Sprintf("%q:%q", arg[:eq], arg[eq+1:])
 		}
 	}
-	js := json.RawMessage("{" + strings.Join(args, ",") + "}")
-	return &js
+	return json.RawMessage("{" + strings.Join(args, ",") + "}")
 }
 
 func main() {
@@ -87,8 +85,7 @@ func main() {
 		if err != nil {
 			die("Couldn't read from stdin:", err)
 		}
-		js := json.RawMessage(stdin)
-		params = &js // RawMessage needs pointer receiver
+		params = json.RawMessage(stdin)
 	}
 
 	// connect to server
