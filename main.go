@@ -13,7 +13,7 @@ import (
 )
 
 func usage() {
-	fmt.Fprintln(os.Stderr, `USAGE:
+	os.Stderr.WriteString(`USAGE:
   jr ADDRESS:PORT METHOD [PARAMETER...]
 
 Parameters are key/value pairs. They come in two forms:
@@ -23,7 +23,6 @@ Parameters are key/value pairs. They come in two forms:
 
 Options:
   -no-format	do not format JSON output (default: false)`)
-	os.Exit(1)
 }
 
 func die(args ...interface{}) {
@@ -70,7 +69,8 @@ func main() {
 	flag.Parse()
 	args := flag.Args()
 	if len(args) < 2 {
-		usage()
+		flag.Usage()
+		os.Exit(2)
 	}
 
 	// detect whether the user is piping data to stdin
