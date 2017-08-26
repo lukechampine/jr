@@ -21,8 +21,14 @@ Parameters are key/value pairs. They come in two forms:
   key=value     (for strings; result is "key":"value")
   key:=value    (for raw JSON; result is "key":value)
 
+Specifying one or more keys causes the request to be sent as a
+JSON object. To send a raw JSON value, you may use either a
+single value without a key (again using : for non-string types),
+or pipe the JSON to jr via stdin.
+
 Options:
-  -no-format	do not format JSON output (default: false)`)
+  -no-format	do not format JSON output (default: false)
+`)
 }
 
 func die(args ...interface{}) {
