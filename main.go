@@ -101,16 +101,17 @@ func main() {
 	if err != nil {
 		die("Call failed:", err)
 	}
+	if !json.Valid([]byte(reply)) {
+		die("Call returned invalid JSON:", string(reply))
+	}
 
 	// print response, formatting if requested
+	buf := new(bytes.Buffer)
 	if *ugly {
-		fmt.Println(string(reply))
+		buf.Write([]byte(reply))
 	} else {
-		buf := new(bytes.Buffer)
-		err = json.Indent(buf, []byte(reply), "", "\t")
-		if err != nil {
-			die("Couldn't format response:", err)
-		}
-		fmt.Println(buf)
+		// reply is already validated, so no error possible
+		json.Indent(buf, []byte(reply), "", "\t")
 	}
+	fmt.Println(buf)
 }
